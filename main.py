@@ -160,7 +160,7 @@ def skip_intro():
 def intro_screens():
     st.title("Welcome to Self Study Course Generator with AI!")
     st.image("img.jpg", caption="Introduction Image")
-    st.video("intro.mp4")
+    # st.video("intro.mp4")
     if st.button("Skip Intro"):
         skip_intro()
 
