@@ -147,172 +147,197 @@ def take_notes(content):
     return summary
 
 
-anything="Anything"
 
+# Initialize session state if not already done
+if 'intro_complete' not in st.session_state:
+    st.session_state.intro_complete = False
 
-# Streamlit app layout and functionality
-st.title(f":violet[Learn {anything} With AI]")
+# Function to skip the introduction screens
+def skip_intro():
+    st.session_state.intro_complete = True
 
-with st.sidebar:
-    st.header("Course Configuration")
-    api_key = st.text_input("Enter your OpenAI API key", type="password")
-    st.write("Get your OpenAI API key from here [https://platform.openai.com/api-keys]")
-    course_name = st.text_input("Enter the course name")
-    level_of_understanding = st.selectbox("Select the level of understanding", ["basic", "intermediate", "advanced"])
-    generate_button = st.button("Generate Study Material")
+# Define the introduction screens
+def intro_screens():
+    st.title("Welcome to Self Study Course Generator with AI!")
+    st.image("img.jpg", caption="Introduction Image")
+    st.video("intro.mp4")
+    if st.button("Skip Intro"):
+        skip_intro()
 
-if api_key:
-    openai.api_key = api_key
-
-if generate_button:
-    if not api_key:
-        st.error("Please enter your OpenAI API key.")
-    elif not course_name:
-        st.error("Please enter the course name.")
-    else:
-        topics = generate_topics(course_name, level_of_understanding)
-        st.session_state['topics'] = topics
-        anything=f"{course_name}"
-
-if 'topics' in st.session_state:
+# Main content of the app
+def main_content():
     
-    topics = st.session_state['topics']
 
-    for topic in topics:
+
+    st.title(f":violet[Learn Any Course With AI]")
+
+    with st.sidebar:
+        st.header("Course Configuration")
+        api_key = st.text_input("Enter your OpenAI API key", type="password")
+        st.write("Get your OpenAI API key from here [https://platform.openai.com/api-keys]")
+        course_name = st.text_input("Enter the course name")
+        level_of_understanding = st.selectbox("Select the level of understanding", ["basic", "intermediate", "advanced"])
+        generate_button = st.button("Generate Study Material")
+
+    if api_key:
+        openai.api_key = api_key
+
+    if generate_button:
+        if not api_key:
+            st.error("Please enter your OpenAI API key.")
+        elif not course_name:
+            st.error("Please enter the course name.")
+        else:
+            topics = generate_topics(course_name, level_of_understanding)
+            st.session_state['topics'] = topics
+            anything=f"{course_name}"
+
+    if 'topics' in st.session_state:
         
-        container = st.container()
-               
-        container.subheader(topic)
-        generate_subtopics_btn = container.button(f"Start Learning {topic.split('.')[1].strip()}", key=f"subtopics_btn_{topic}")
-        
-        if generate_subtopics_btn:
-            subtopics = generate_subtopics(topic)
-            st.session_state[f"subtopics_{topic}"] = subtopics
+        topics = st.session_state['topics']
 
-        if f"subtopics_{topic}" in st.session_state:
-            subtopics = st.session_state[f"subtopics_{topic}"]
-
-            for subtopic in subtopics:
-                expander = container.expander(f"{subtopic}")
-                expander.markdown(f"### {subtopic}")
-                notes=[]
-
-                tab1, tab2, tab3, tab4, tab5 = expander.tabs(["Content", "MCQs", "Videos", "Doubts", "Notes"])
+        for topic in topics:
+            
+            container = st.container()
                 
-                with tab1:
-                    if st.button(f"Generate Content for {subtopic.split('.')[1].strip()}", key=f"content_btn_{subtopic}"):
-                        content = generate_content(subtopic)
-                        st.session_state[f"content_{subtopic}"] = content
-                    if f"content_{subtopic}" in st.session_state:
-                        st.write(st.session_state[f"content_{subtopic}"])
-                        content = st.session_state[f"content_{subtopic}"]
+            container.subheader(topic)
+            generate_subtopics_btn = container.button(f"Start Learning {topic.split('.')[1].strip()}", key=f"subtopics_btn_{topic}")
+            
+            if generate_subtopics_btn:
+                subtopics = generate_subtopics(topic)
+                st.session_state[f"subtopics_{topic}"] = subtopics
 
-                        if st.button(f"Generate notes", key=f"notes_btn_{content}"):
-                            note = take_notes(content)
-                            st.session_state[f"notes_{content}"] = note
-                            notes.append(note)
-                            st.success("Notes have been updated, check the Notes section")
+            if f"subtopics_{topic}" in st.session_state:
+                subtopics = st.session_state[f"subtopics_{topic}"]
 
-                        # if f"notes_{content}" in st.session_state:
-                        #     st.markdown(st.session_state[f"notes_{content}"])
+                for subtopic in subtopics:
+                    expander = container.expander(f"{subtopic}")
+                    expander.markdown(f"### {subtopic}")
+                    notes=[]
 
-                with tab2:
-                    if st.button(f"Generate MCQs for {subtopic.split('.')[1].strip()}", key=f"mcqs_btn_{subtopic}"):
-                        mcqs = generate_mcqs(subtopic)
-                        mcq_answers = generate_mcqs_answer(mcqs)
-                        questions = []
-                        for mcq in mcqs:
-                            parts = mcq.split("\n")
-                            question = parts[0].strip()
-                            options = [opt.strip() for opt in parts[1:]]
-                            questions.append({"question": question, "options": options})
-                        st.session_state[f"mcqs_{subtopic}"] = questions
-                        st.session_state[f"mcq_answers_{subtopic}"] = mcq_answers
+                    tab1, tab2, tab3, tab4, tab5 = expander.tabs(["Content", "MCQs", "Videos", "Doubts", "Notes"])
+                    
+                    with tab1:
+                        if st.button(f"Generate Content for {subtopic.split('.')[1].strip()}", key=f"content_btn_{subtopic}"):
+                            content = generate_content(subtopic)
+                            st.session_state[f"content_{subtopic}"] = content
+                        if f"content_{subtopic}" in st.session_state:
+                            st.write(st.session_state[f"content_{subtopic}"])
+                            content = st.session_state[f"content_{subtopic}"]
 
-                    if f"mcqs_{subtopic}" in st.session_state:
-                        st.subheader("MCQs")
-                        questions = st.session_state[f"mcqs_{subtopic}"]
-                        mcq_answers = st.session_state[f"mcq_answers_{subtopic}"]
+                            if st.button(f"Generate notes", key=f"notes_btn_{content}"):
+                                note = take_notes(content)
+                                st.session_state[f"notes_{content}"] = note
+                                notes.append(note)
+                                st.success("Notes have been updated, check the Notes section")
 
-                        # Debugging line to print mcqs structure
-                        # st.write(mcq_answers)
+                            # if f"notes_{content}" in st.session_state:
+                            #     st.markdown(st.session_state[f"notes_{content}"])
 
-                        for idx, question in enumerate(questions):
-                            st.write(question['question'])  # This line causes the error
-                            selected_option = st.radio(
-                                "options",
-                                question['options'],
-                                key=f"mcq_{subtopic}_{idx}"
-                            )
-                            # st.write(selected_option.split(")")[1])
-                            # st.write(mcq_answers[idx].split(")")[1])
-                            if selected_option:
-                                if ((selected_option.split(".")[1])  == (mcq_answers[idx].split(".")[2])):
-                                    st.success("Correct Answer")
-                                else:
-                                    st.error("Wrong answer. Try again.")
-                                    
+                    with tab2:
+                        if st.button(f"Generate MCQs for {subtopic.split('.')[1].strip()}", key=f"mcqs_btn_{subtopic}"):
+                            mcqs = generate_mcqs(subtopic)
+                            mcq_answers = generate_mcqs_answer(mcqs)
+                            questions = []
+                            for mcq in mcqs:
+                                parts = mcq.split("\n")
+                                question = parts[0].strip()
+                                options = [opt.strip() for opt in parts[1:]]
+                                questions.append({"question": question, "options": options})
+                            st.session_state[f"mcqs_{subtopic}"] = questions
+                            st.session_state[f"mcq_answers_{subtopic}"] = mcq_answers
+
+                        if f"mcqs_{subtopic}" in st.session_state:
+                            st.subheader("MCQs")
+                            questions = st.session_state[f"mcqs_{subtopic}"]
+                            mcq_answers = st.session_state[f"mcq_answers_{subtopic}"]
+
+                            # Debugging line to print mcqs structure
+                            # st.write(mcq_answers)
+
+                            for idx, question in enumerate(questions):
+                                st.write(question['question'])  # This line causes the error
+                                selected_option = st.radio(
+                                    "options",
+                                    question['options'],
+                                    key=f"mcq_{subtopic}_{idx}"
+                                )
+                                # st.write(selected_option.split(")")[1])
+                                # st.write(mcq_answers[idx].split(")")[1])
+                                if selected_option:
+                                    if ((selected_option.split(".")[1])  == (mcq_answers[idx].split(".")[2])):
+                                        st.success("Correct Answer")
+                                    else:
+                                        st.error("Wrong answer. Try again.")
+                                        
 
 
-                with tab3:
-                    if st.button(f"Search Relevant Videos on YouTube for {subtopic.split('.')[1].strip()}", key=f"videos_btn_{subtopic}"):
-                        videos = get_youtube_videos(f'{subtopic} video tutorial for topic name {course_name}')
-                        if videos:
-                            st.session_state[f"videos_{subtopic}"] = videos
+                    with tab3:
+                        if st.button(f"Search Relevant Videos on YouTube for {subtopic.split('.')[1].strip()}", key=f"videos_btn_{subtopic}"):
+                            videos = get_youtube_videos(f'{subtopic} video tutorial for topic name {course_name}')
+                            if videos:
+                                st.session_state[f"videos_{subtopic}"] = videos
 
-                    if f"videos_{subtopic}" in st.session_state:
-                        for video in st.session_state[f"videos_{subtopic}"]:
-                            st.video(video)
-
-                        if st.button("Generate Summary", key=f"generate_summary_btn_{subtopic}"):
-                            transcripts = []
-                            summaries = []
+                        if f"videos_{subtopic}" in st.session_state:
                             for video in st.session_state[f"videos_{subtopic}"]:
-                                try:
-                                    transcript = extract_transcript_details(video)
-                                    transcripts.append(transcript)
-                                    summary = generate_youtube_summary(transcript)
-                                    summaries.append(summary)
-                                except Exception as e:
-                                    st.error(f"No transcript found for {video}")
+                                st.video(video)
 
-                            if transcripts:
-                                st.session_state[f"video_summaries_{subtopic}"] = summaries
-                                for summary in st.session_state[f"video_summaries_{subtopic}"]:
-                                    st.write(summary)
-                            else:
-                                st.warning("No transcripts found for the selected videos.")
+                            if st.button("Generate Summary", key=f"generate_summary_btn_{subtopic}"):
+                                transcripts = []
+                                summaries = []
+                                for video in st.session_state[f"videos_{subtopic}"]:
+                                    try:
+                                        transcript = extract_transcript_details(video)
+                                        transcripts.append(transcript)
+                                        summary = generate_youtube_summary(transcript)
+                                        summaries.append(summary)
+                                    except Exception as e:
+                                        st.error(f"No transcript found for {video}")
 
-                with tab4:
-                    if "chat_history" not in st.session_state:
-                        st.session_state["chat_history"] = []
+                                if transcripts:
+                                    st.session_state[f"video_summaries_{subtopic}"] = summaries
+                                    for summary in st.session_state[f"video_summaries_{subtopic}"]:
+                                        st.write(summary)
+                                else:
+                                    st.warning("No transcripts found for the selected videos.")
 
-                    input_text = st.text_input("Input: ", key=f"input{subtopic}")
-                    submit = st.button("Ask the question", key=f"submit_button{subtopic}")
+                    with tab4:
+                        if "chat_history" not in st.session_state:
+                            st.session_state["chat_history"] = []
 
-                    if submit and input_text:
-                        response = get_chatgpt_response(input_text, st.session_state["chat_history"])
-                        st.session_state["chat_history"].insert(0,({"role": "user", "content": input_text}))
+                        input_text = st.text_input("Input: ", key=f"input{subtopic}")
+                        submit = st.button("Ask the question", key=f"submit_button{subtopic}")
 
-                        
-                        response_text = ""
-                        for chunk in response:
-                            if "choices" in chunk and len(chunk.choices) > 0 and "delta" in chunk.choices[0] and "content" in chunk.choices[0].delta:
-                                content = chunk.choices[0].delta['content']
-                                response_text += content
-                                # st.write(content)
+                        if submit and input_text:
+                            response = get_chatgpt_response(input_text, st.session_state["chat_history"])
+                            st.session_state["chat_history"].insert(0,({"role": "user", "content": input_text}))
 
-                        st.session_state["chat_history"].insert(1,({"role": "assistant", "content": response_text}))
+                            
+                            response_text = ""
+                            for chunk in response:
+                                if "choices" in chunk and len(chunk.choices) > 0 and "delta" in chunk.choices[0] and "content" in chunk.choices[0].delta:
+                                    content = chunk.choices[0].delta['content']
+                                    response_text += content
+                                    # st.write(content)
 
-                        
-                        for message in st.session_state["chat_history"]:
-                            st.write(f"{message['role']}: {message['content']}")
+                            st.session_state["chat_history"].insert(1,({"role": "assistant", "content": response_text}))
 
-                with tab5:
-                
-                    for note in notes:
-                        st.markdown(note)
+                            
+                            for message in st.session_state["chat_history"]:
+                                st.write(f"{message['role']}: {message['content']}")
+
+                    with tab5:
                     
-                    
+                        for note in notes:
+                            st.markdown(note)
+                        
+                        
+    else:
+        st.info("Please enter your OpenAI API key and course details to generate content.")
+
+
+if st.session_state.intro_complete:
+    main_content()
 else:
-    st.info("Please enter your OpenAI API key and course details to generate content.")
+    intro_screens()
+
