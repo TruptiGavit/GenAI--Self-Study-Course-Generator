@@ -1,4 +1,5 @@
 # GenAI-Course-Generator-Self-Study
+![img](https://github.com/TruptiGavit/GenAI-Course-Generator-Self-Study/assets/163740738/21d346a4-f2f7-4d63-a852-ed333162d43a)
 
 Developed an AI-driven learning platform leveraging cutting-edge technologies like OpenAI's GPT-3.5 and Streamlit, enabling personalized and adaptive learning experiences tailored to individual needs.
 
